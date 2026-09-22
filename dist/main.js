@@ -31,8 +31,9 @@ async function bootstrap() {
         ],
         optionsSuccessStatus: 204,
     });
-    await app.listen(3001);
-    console.log('Server jalan di http://localhost:3001');
+    const port = process.env.PORT ? Number(process.env.PORT) : 3001;
+    await app.listen(port);
+    console.log(`Server jalan di http://localhost:${port}`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map
