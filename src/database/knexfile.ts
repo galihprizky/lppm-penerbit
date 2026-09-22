@@ -6,7 +6,7 @@ const config: Knex.Config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
     user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_PASSWORD || 'q1w2e3r4t5',
     database: process.env.DB_NAME || 'DB_LPPM_PRESS',
   },
 };
