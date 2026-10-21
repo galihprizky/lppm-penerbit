@@ -147,3 +147,21 @@ CREATE TABLE versi_naskah (
     catatan_perubahan TEXT,                          -- Ringkasan revisi dari pengunggah
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TYPE rekomendasi_review_enum AS ENUM (
+  'DITERIMA',
+  'REVISI_MINOR',
+  'REVISI_MAYOR',
+  'DITOLAK'
+);
+
+CREATE TABLE hasil_review (
+    id SERIAL PRIMARY KEY,
+    penugasan_id INT NOT NULL UNIQUE REFERENCES penugasan_reviewer(id) ON DELETE CASCADE,
+
+    rekomendasi rekomendasi_review_enum NOT NULL,
+    catatan_review TEXT NOT NULL,
+    file_catatan_review VARCHAR(500),
+
+    submitted_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);

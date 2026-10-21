@@ -15,6 +15,7 @@ import {
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { NaskahService } from './naskah.service';
 import { CreateNaskahDto } from './dto/create-naskah.dto';
+import { CreateRevisiNaskahDto } from './dto/create-revisi-naskah.dto';
 import { UpdateNaskahDto } from './dto/update-naskah.dto';
 import {
   naskahFileFields,
@@ -71,6 +72,18 @@ export class NaskahController {
     return this.buildResponse(HttpStatus.CREATED, 'Naskah berhasil dibuat', data);
   }
 
+  @Post(':id/revisi')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileFieldsInterceptor(naskahFileFields, naskahMulterOptions))
+  async createRevisi(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateRevisiNaskahDto,
+    @UploadedFiles() files: NaskahUploadedFiles,
+  ): Promise<ApiResponse<any>> {
+    const data = await this.naskahService.createRevisi(id, dto, files);
+    return this.buildResponse(HttpStatus.CREATED, 'Revisi naskah berhasil dikirim', data);
+  }
+
   @Get()
   async findAll(): Promise<ApiResponse<any[]>> {
     const data = await this.naskahService.findAll();
@@ -84,6 +97,15 @@ export class NaskahController {
   ): Promise<ApiResponse<any[]>> {
     const data = await this.naskahService.findByPengusulId(pengusulId);
     const message = data.length > 0 ? 'Data naskah berdasarkan pengusul berhasil diambil' : 'Tidak ada naskah untuk pengusul ini';
+    return this.buildResponse(HttpStatus.OK, message, data);
+  }
+
+  @Get('reviewer/:reviewerId')
+  async findByReviewerId(
+    @Param('reviewerId', ParseIntPipe) reviewerId: number,
+  ): Promise<ApiResponse<any[]>> {
+    const data = await this.naskahService.findByReviewerId(reviewerId);
+    const message = data.length > 0 ? 'Data naskah untuk reviewer berhasil diambil' : 'Tidak ada naskah yang ditugaskan untuk reviewer ini';
     return this.buildResponse(HttpStatus.OK, message, data);
   }
 

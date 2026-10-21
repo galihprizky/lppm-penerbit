@@ -11,6 +11,7 @@ import { JurusanModule } from './jurusan/jurusan.module';
 import { NaskahModule } from './naskah/naskah.module';
 import { RolesModule } from './roles/roles.module';
 import { PenugasanReviewerModule } from './penugasan-reviewer/penugasan-reviewer.module';
+import { HasilReviewModule } from './hasil-review/hasil-review.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PenugasanReviewerModule } from './penugasan-reviewer/penugasan-reviewer
     NaskahModule,
     RolesModule,
     PenugasanReviewerModule,
+    HasilReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService],

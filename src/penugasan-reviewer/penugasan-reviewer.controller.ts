@@ -6,11 +6,13 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
 } from '@nestjs/common';
 import { PenugasanReviewerService } from './penugasan-reviewer.service';
 import { CreatePenugasanReviewerDto } from './dto/create-penugasan-reviewer.dto';
+import { UpdateStatusPenugasanDto } from './dto/update-status-penugasan.dto';
 import { UpdatePenugasanReviewerDto } from './dto/update-penugasan-reviewer.dto';
 
 type ApiResponse<T> = {
@@ -43,6 +45,15 @@ export class PenugasanReviewerController {
       ? 'Data penugasan reviewer berhasil diambil'
       : 'Belum ada penugasan reviewer untuk naskah ini';
     return this.buildResponse(HttpStatus.OK, message, data);
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateStatusPenugasanDto,
+  ): Promise<ApiResponse<any>> {
+    const data = await this.penugasanReviewerService.updateStatusByReviewer(id, dto);
+    return this.buildResponse(HttpStatus.OK, 'Status penugasan berhasil diperbarui', data);
   }
 
   @Put(':id')
