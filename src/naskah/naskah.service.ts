@@ -275,7 +275,11 @@ export class NaskahService {
       .orderBy('pr.created_at', 'desc');
   }
 
-  async update(id: number, updateNaskahDto: UpdateNaskahDto) {
+  async update(
+    id: number,
+    updateNaskahDto: UpdateNaskahDto,
+    files: NaskahUploadedFiles = {},
+  ) {
     const naskah = await this.knexService.connection('naskah')
       .where({ id })
       .whereNull('deleted_at')
@@ -285,19 +289,64 @@ export class NaskahService {
       throw new NotFoundException('naskah tidak ditemukan');
     }
 
-    if (updateNaskahDto.pengusul_id) {
+    if (updateNaskahDto.pengusul_id !== undefined) {
       await this.ensurePengusulExists(updateNaskahDto.pengusul_id);
     }
 
-    const [updated] = await this.knexService.connection('naskah')
-      .where({ id })
-      .update({
-        ...updateNaskahDto,
-        updated_at: new Date(),
-      })
-      .returning('*');
+    const fileUpdates = {
+      ...(files.file_draft_naskah?.[0] && {
+        file_draft_naskah: files.file_draft_naskah[0].path,
+      }),
+      ...(files.file_profile_penulis?.[0] && {
+        file_profile_penulis: files.file_profile_penulis[0].path,
+      }),
+      ...(files.file_surat_keaslian?.[0] && {
+        file_surat_keaslian: files.file_surat_keaslian[0].path,
+      }),
+    };
 
-    return updated;
+    return this.knexService.connection.transaction(async (trx) => {
+      const [updated] = await trx('naskah')
+        .where({ id })
+        .update({
+          ...updateNaskahDto,
+          updated_at: new Date(),
+        })
+        .returning('*');
+
+      if (Object.keys(fileUpdates).length > 0) {
+        const latestVersion = await trx('versi_naskah')
+          .where({ naskah_id: id })
+          .orderBy('versi_ke', 'desc')
+          .first();
+
+        if (latestVersion) {
+          await trx('versi_naskah')
+            .where({ id: latestVersion.id })
+            .update(fileUpdates);
+        } else {
+          const fileDraftNaskah = files.file_draft_naskah?.[0];
+          if (!fileDraftNaskah) {
+            throw new BadRequestException(
+              'file_draft_naskah wajib diunggah untuk naskah yang belum memiliki versi',
+            );
+          }
+
+          await trx('versi_naskah').insert({
+            naskah_id: id,
+            uploaded_by: updateNaskahDto.pengusul_id ?? naskah.pengusul_id,
+            tahap: 'DRAFT_AWAL',
+            versi_ke: 1,
+            file_draft_naskah: fileDraftNaskah.path,
+            file_profile_penulis: files.file_profile_penulis?.[0]?.path ?? null,
+            file_surat_keaslian: files.file_surat_keaslian?.[0]?.path ?? null,
+            created_at: new Date(),
+          });
+        }
+      }
+
+      return updated;
+    });
   }
 
   async remove(id: number) {

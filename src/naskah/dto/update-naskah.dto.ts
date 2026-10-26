@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
   IsArray,
@@ -34,6 +34,19 @@ export class UpdateNaskahDto {
   @IsOptional()
   jenis_buku?: JenisBukuEnum;
 
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value.map((item) => String(item).trim());
+    if (typeof value !== 'string' || value.trim() === '') return undefined;
+    const trimmed = value.trim();
+    if (trimmed.startsWith('[')) {
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        return value;
+      }
+    }
+    return trimmed.split(',').map((item) => item.trim()).filter(Boolean);
+  })
   @IsArray()
   @ArrayNotEmpty()
   @IsEnum(TargetPembacaEnum, { each: true })
@@ -48,7 +61,11 @@ export class UpdateNaskahDto {
   @IsOptional()
   warna_isi_buku?: WarnaIsiEnum;
 
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsBoolean()
   @IsOptional()
   pake_editor_pribadi?: boolean;

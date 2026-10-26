@@ -116,11 +116,13 @@ export class NaskahController {
   }
 
   @Put(':id')
+  @UseInterceptors(FileFieldsInterceptor(naskahFileFields, naskahMulterOptions))
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateNaskahDto: UpdateNaskahDto,
+    @UploadedFiles() files: NaskahUploadedFiles,
   ): Promise<ApiResponse<any>> {
-    const data = await this.naskahService.update(id, updateNaskahDto);
+    const data = await this.naskahService.update(id, updateNaskahDto, files);
     return this.buildResponse(HttpStatus.OK, 'Naskah berhasil diperbarui', data);
   }
 
